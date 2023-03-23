@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SharpSearch\SharpSearch.csproj" />
+    <ProjectReference Include="..\..\src\SharpSearch\SharpSearch.csproj" />
   </ItemGroup>
 
 </Project>
