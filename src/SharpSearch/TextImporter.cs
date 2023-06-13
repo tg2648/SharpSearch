@@ -1,16 +1,19 @@
 
 public class TextImporter : IFileImporter
 {
-    public IEnumerable<String> extractLines(FileInfo file)
+    public IEnumerable<String> ExtractTokens(FileInfo file)
     {
+        var tokenizer = new Tokenizer();
         using (StreamReader sr = file.OpenText())
         {
             String? line;
             while ((line = sr.ReadLine()) != null)
             {
-                yield return line;
+                foreach (String token in tokenizer.ExtractTokens(line))
+                {
+                    yield return token;
+                }
             }
-            yield break;
         }
     }
 }

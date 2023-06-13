@@ -1,4 +1,4 @@
 interface IFileImporter
 {
-    IEnumerable<String> extractLines(FileInfo file);
+    IEnumerable<String> ExtractTokens(FileInfo file);
 }
