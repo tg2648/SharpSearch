@@ -7,9 +7,14 @@ public class Program
     {
         try
         {
-            foreach (string line in File.ReadLines(args[0]))
+            var importer = new TextImporter();
+            var file = new FileInfo(args[0]);
+            if (file.Exists)
             {
-                Console.WriteLine(line);
+                foreach (String line in importer.extractLines(file))
+                {
+                    Console.WriteLine(line);
+                }
             }
         }
         catch (IOException e)
