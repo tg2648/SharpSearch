@@ -1,6 +1,11 @@
+using SharpSearch.Utilities;
 
+namespace SharpSearch.Importers;
 public class TextImporter : IFileImporter
 {
+    /// <summary>
+    /// Parses the given file into a collection of tokens.
+    /// </summary>
     public IEnumerable<String> ExtractTokens(FileInfo file)
     {
         var tokenizer = new Tokenizer();

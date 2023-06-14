@@ -1,3 +1,5 @@
+namespace SharpSearch.Utilities;
+
 public class Tokenizer
 {
     public IEnumerable<String> ExtractTokens(String text)

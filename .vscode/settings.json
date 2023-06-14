@@ -1,5 +1,6 @@
 {
-    "csharp.referencesCodeLens.enabled": false,
-    "editor.formatOnType": true,
-    "editor.formatOnSave": true
+  "csharp.referencesCodeLens.enabled": false,
+  "editor.formatOnType": true,
+  "editor.formatOnSave": true,
+  "dotnet.defaultSolution": "SharpSearch.sln"
 }
