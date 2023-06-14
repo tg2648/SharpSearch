@@ -2,5 +2,5 @@ namespace SharpSearch.Importers;
 
 interface IFileImporter
 {
-    IEnumerable<String> ExtractTokens(FileInfo file);
+    IEnumerable<string> ExtractTokens(FileInfo file);
 }

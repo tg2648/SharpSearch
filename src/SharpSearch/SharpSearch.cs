@@ -10,7 +10,7 @@ public class SharpSearch
         var file = new FileInfo(args[0]);
         if (file.Exists)
         {
-            foreach (String token in importer.ExtractTokens(file))
+            foreach (string token in importer.ExtractTokens(file))
             {
                 Console.Write($"<{token}> ");
             }
