@@ -12,7 +12,7 @@ public class SharpSearch
         {
             foreach (String token in importer.ExtractTokens(file))
             {
-                Console.Write($"{token} ");
+                Console.Write($"<{token}> ");
             }
             Console.WriteLine();
         }
