@@ -55,7 +55,7 @@ public class Tokenizer
                 next = curr + 1;
             }
 
-            token = text[curr..next];
+            token = text[curr..next].ToLower();
             if (token.Length > LENGTH_THRESHOLD)
             {
                 yield return token;

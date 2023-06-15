@@ -52,4 +52,14 @@ public class TokenizerTests
 
         CollectionAssert.AreEqual(expected, result);
     }
+
+    [Test]
+    public void ExtractTokens_MixedCase_ReturnsLowercaseTokens()
+    {
+        var text = "ONE TwO threE four";
+        string[] expected = { "one", "two", "three", "four" };
+        var result = _tokenizer.ExtractTokens(text);
+
+        CollectionAssert.AreEqual(expected, result);
+    }
 }
