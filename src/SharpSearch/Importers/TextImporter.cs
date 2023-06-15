@@ -1,6 +1,7 @@
 using SharpSearch.Utilities;
 
 namespace SharpSearch.Importers;
+
 public class TextImporter : IFileImporter
 {
     /// <summary>
