@@ -2,9 +2,16 @@ using SharpSearch.Importers;
 
 namespace SharpSearch;
 
+using TermFreq = System.Collections.Generic.Dictionary<DocumentId, int>;
+
 class Index
 {
     private Dictionary<string, IFileImporter> _extensionToImporter = new();
+
+    // Inverted mapping of term -> document -> term frequency in that document
+    private Dictionary<TermId, TermFreq> _termDocFreq = new();
+
+    private HashSet<string> _indexedFiles = new();
 
     public Index()
     {
@@ -15,32 +22,33 @@ class Index
     /// <summary>
     /// Recursively adds all files in a directory to the index
     /// </summary>
-    private void AddDirectory(string dirPath)
+    private void AddDirectory(DirectoryInfo dir)
     {
-        foreach (string filePath in Directory.EnumerateFiles(dirPath, "*", SearchOption.AllDirectories))
+        foreach (var file in dir.EnumerateFiles("*", SearchOption.AllDirectories))
         {
-            AddFile(filePath);
+            AddFile(file);
         }
     }
 
     /// <summary>
     /// Adds file to the index
     /// </summary>
-    private void AddFile(string filePath)
+    private void AddFile(FileInfo file)
     {
-        var file = new FileInfo(filePath);
-        string extension = file.Extension;
+        IFileImporter importer = _extensionToImporter[file.Extension];
 
-        if (!_extensionToImporter.ContainsKey(extension))
+        var tokenGroups = importer.ExtractTokens(file).GroupBy(token => token);
+
+        Console.WriteLine($"Indexed: {file.FullName}");
+
+        foreach (var group in tokenGroups)
         {
-            Console.WriteLine($"SKIPPED: Unknown extension {extension}: {filePath}");
+            string token = group.Key;
+            _termDocFreq.TryAdd(token, new TermFreq());
+            _termDocFreq[token].Add(file.FullName, group.Count());
         }
-        else
-        {
-            IFileImporter importer = _extensionToImporter[extension];
-            var tokens = String.Join(", ", importer.ExtractTokens(file).Select(tok => $"<{tok}>"));
-            Console.WriteLine($"{file.Name} tokens: {tokens}");
-        }
+
+        _indexedFiles.Add(file.FullName);
     }
 
     /// <summary>
@@ -51,16 +59,41 @@ class Index
         if (File.Exists(path))
         {
             // This path is a file
-            AddFile(path);
+            var file = new FileInfo(path);
+            string extension = file.Extension;
+
+            if (!_extensionToImporter.ContainsKey(extension))
+            {
+                Console.WriteLine($"SKIPPED: Unknown extension {extension}: {path}");
+            }
+            else
+            {
+                AddFile(file);
+            }
         }
         else if (Directory.Exists(path))
         {
             // This path is a directory
-            AddDirectory(path);
+            var dir = new DirectoryInfo(path);
+            AddDirectory(dir);
         }
         else
         {
             Console.WriteLine("{0} is not a valid file or directory.", path);
+        }
+    }
+
+    public void Info()
+    {
+        Console.WriteLine("Indexed files:");
+
+        foreach (var (term, tf) in _termDocFreq)
+        {
+            Console.WriteLine(term);
+            foreach (var (doc, freq) in tf)
+            {
+                Console.WriteLine($"  {doc}: {freq}");
+            }
         }
     }
 }
