@@ -9,6 +9,7 @@ class Index
     public Index()
     {
         _extensionToImporter.Add(".txt", new TextImporter());
+        _extensionToImporter.Add(".md", new TextImporter());
     }
 
     /// <summary>
@@ -32,13 +33,13 @@ class Index
 
         if (!_extensionToImporter.ContainsKey(extension))
         {
-            Console.WriteLine($"SKIPPED: Unknown extension: {filePath}");
+            Console.WriteLine($"SKIPPED: Unknown extension {extension}: {filePath}");
         }
         else
         {
             IFileImporter importer = _extensionToImporter[extension];
             var tokens = String.Join(", ", importer.ExtractTokens(file).Select(tok => $"<{tok}>"));
-            Console.WriteLine($"File tokens: {tokens}");
+            Console.WriteLine($"{file.Name} tokens: {tokens}");
         }
     }
 
