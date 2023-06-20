@@ -39,9 +39,11 @@ public class Tokenizer
         int next = 0;
 
         string token;
-        while (curr < text.Length)
+        while (true)
         {
             curr = TrimLeft(text, curr);
+            if (curr >= text.Length) break;
+
             if (char.IsLetter(text[curr]))
             {
                 next = ChopWhile(text, curr, char.IsLetterOrDigit);

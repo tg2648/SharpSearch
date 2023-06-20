@@ -16,7 +16,7 @@ public class TokenizerTests
     [Test]
     public void ExtractTokens_LettersOnly_ReturnsTokens()
     {
-        var text = "one two three";
+        var text = "    one two three    ";
         string[] expected = { "one", "two", "three" };
         var result = _tokenizer.ExtractTokens(text);
 
@@ -67,6 +67,16 @@ public class TokenizerTests
     public void ExtractTokens_EmptyString_ReturnsNothing()
     {
         var text = "";
+        string[] expected = { };
+        var result = _tokenizer.ExtractTokens(text);
+
+        CollectionAssert.AreEqual(expected, result);
+    }
+
+    [Test]
+    public void ExtractTokens_AllSpace_ReturnsNothing()
+    {
+        var text = "   ";
         string[] expected = { };
         var result = _tokenizer.ExtractTokens(text);
 

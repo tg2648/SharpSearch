@@ -17,6 +17,8 @@ class Index
     {
         _extensionToImporter.Add(".txt", new TextImporter());
         _extensionToImporter.Add(".md", new TextImporter());
+        _extensionToImporter.Add(".html", new HTMLImporter());
+        _extensionToImporter.Add(".xhtml", new HTMLImporter());
     }
 
     /// <summary>
