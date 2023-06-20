@@ -62,4 +62,14 @@ public class TokenizerTests
 
         CollectionAssert.AreEqual(expected, result);
     }
+
+    [Test]
+    public void ExtractTokens_EmptyString_ReturnsNothing()
+    {
+        var text = "";
+        string[] expected = { };
+        var result = _tokenizer.ExtractTokens(text);
+
+        CollectionAssert.AreEqual(expected, result);
+    }
 }
