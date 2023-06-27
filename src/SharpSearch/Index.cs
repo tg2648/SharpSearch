@@ -2,14 +2,14 @@ using SharpSearch.Importers;
 
 namespace SharpSearch;
 
-using TermFreq = System.Collections.Generic.Dictionary<DocumentId, int>;
+using TermDocFreq = System.Collections.Generic.Dictionary<DocumentId, int>;
 
 class Index
 {
     private Dictionary<string, IFileImporter> _extensionToImporter = new();
 
     // Inverted mapping of term -> document -> term frequency in that document
-    private Dictionary<TermId, TermFreq> _termDocFreq = new();
+    private Dictionary<TermId, TermDocFreq> _terms = new();
 
     private HashSet<string> _indexedFiles = new();
 
@@ -46,8 +46,8 @@ class Index
         foreach (var group in tokenGroups)
         {
             string token = group.Key;
-            _termDocFreq.TryAdd(token, new TermFreq());
-            _termDocFreq[token].Add(file.FullName, group.Count());
+            _terms.TryAdd(token, new TermDocFreq());
+            _terms[token].Add(file.FullName, group.Count());
         }
 
         _indexedFiles.Add(file.FullName);
@@ -89,7 +89,7 @@ class Index
     {
         Console.WriteLine("Indexed files:");
 
-        foreach (var (term, tf) in _termDocFreq)
+        foreach (var (term, tf) in _terms)
         {
             Console.WriteLine(term);
             foreach (var (doc, freq) in tf)
