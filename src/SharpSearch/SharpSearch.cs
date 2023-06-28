@@ -19,7 +19,8 @@ public class SharpSearch
         var infoCommand = new Command("info", "Information about indexed files");
         rootCommand.AddCommand(infoCommand);
 
-        Index index = new();
+        string indexFileName = "index.json";
+        Index index = new(indexFileName);
 
         addCommand.SetHandler((paths) =>
         {

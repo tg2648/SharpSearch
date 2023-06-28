@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using SharpSearch.Importers;
 
 namespace SharpSearch;
@@ -19,6 +20,20 @@ class Index
     private Dictionary<string, TermDocFreq> _terms = new();
     private Dictionary<string, string> _fileIds = new();
     private HashSet<string> _indexedFiles = new();
+
+    public Index(string indexFileName)
+    {
+        string jsonString = File.ReadAllText(indexFileName);
+        using (JsonDocument document = JsonDocument.Parse(jsonString))
+        {
+            JsonElement root = document.RootElement;
+            JsonElement termsElement = root.GetProperty("_terms");
+            _terms = JsonSerializer.Deserialize<Dictionary<string, TermDocFreq>>(termsElement)!;
+
+            JsonElement fileIdsElement = root.GetProperty("_fileIds");
+            _fileIds = JsonSerializer.Deserialize<Dictionary<string, string>>(fileIdsElement)!;
+        }
+    }
 
     /// <summary>
     /// Recursively adds all files in a directory to the index
@@ -101,7 +116,6 @@ class Index
     public void Save()
     {
         string fileName = "index.json";
-        fileName.GetHashCode();
         string jsonString = JsonSerializer.Serialize(new { _terms = _terms, _fileIds = _fileIds });
         File.WriteAllText(fileName, jsonString);
     }
