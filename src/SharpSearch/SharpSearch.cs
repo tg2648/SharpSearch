@@ -28,6 +28,7 @@ public class SharpSearch
                 index.Add(path);
             }
             index.Info();
+            index.Save();
         }, pathsArgument);
 
         infoCommand.SetHandler(() => index.Info());

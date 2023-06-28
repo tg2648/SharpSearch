@@ -1,25 +1,24 @@
+using System.Text.Json;
 using SharpSearch.Importers;
 
 namespace SharpSearch;
 
-using TermDocFreq = System.Collections.Generic.Dictionary<DocumentId, int>;
+using TermDocFreq = System.Collections.Generic.Dictionary<string, int>;
 
 class Index
 {
-    private Dictionary<string, IFileImporter> _extensionToImporter = new();
+    private Dictionary<string, IFileImporter> _extensionToImporter = new()
+    {
+        [".txt"] = new TextImporter(),
+        [".md"] = new TextImporter(),
+        [".html"] = new HTMLImporter(),
+        [".xhtml"] = new HTMLImporter(),
+    };
 
     // Inverted mapping of term -> document -> term frequency in that document
-    private Dictionary<TermId, TermDocFreq> _terms = new();
-
+    private Dictionary<string, TermDocFreq> _terms = new();
+    private Dictionary<string, string> _fileIds = new();
     private HashSet<string> _indexedFiles = new();
-
-    public Index()
-    {
-        _extensionToImporter.Add(".txt", new TextImporter());
-        _extensionToImporter.Add(".md", new TextImporter());
-        _extensionToImporter.Add(".html", new HTMLImporter());
-        _extensionToImporter.Add(".xhtml", new HTMLImporter());
-    }
 
     /// <summary>
     /// Recursively adds all files in a directory to the index
@@ -38,19 +37,19 @@ class Index
     private void AddFile(FileInfo file)
     {
         IFileImporter importer = _extensionToImporter[file.Extension];
+        string fileId = Guid.NewGuid().ToString("n");
+        _fileIds.Add(fileId, file.FullName);
 
         var tokenGroups = importer.ExtractTokens(file).GroupBy(token => token);
-
-        Console.WriteLine($"Indexed: {file.FullName}");
-
         foreach (var group in tokenGroups)
         {
             string token = group.Key;
             _terms.TryAdd(token, new TermDocFreq());
-            _terms[token].Add(file.FullName, group.Count());
+            _terms[token].Add(fileId, group.Count());
         }
 
         _indexedFiles.Add(file.FullName);
+        Console.WriteLine($"Indexed: {file.FullName}");
     }
 
     /// <summary>
@@ -97,5 +96,13 @@ class Index
                 Console.WriteLine($"  {doc}: {freq}");
             }
         }
+    }
+
+    public void Save()
+    {
+        string fileName = "index.json";
+        fileName.GetHashCode();
+        string jsonString = JsonSerializer.Serialize(new { _terms = _terms, _fileIds = _fileIds });
+        File.WriteAllText(fileName, jsonString);
     }
 }
