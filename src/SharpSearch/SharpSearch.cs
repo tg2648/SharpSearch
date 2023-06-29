@@ -28,9 +28,8 @@ public class SharpSearch
         {
             foreach (var path in paths)
             {
-                index.Add(path);
+                Stopwatcher.Time(() => index.Add(path), "Added file(s) to index in");
             }
-            index.Info();
             index.Save();
         }, pathsArgument);
 

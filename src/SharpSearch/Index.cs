@@ -1,10 +1,9 @@
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using SharpSearch.Importers;
 
 namespace SharpSearch;
 
-using TermDocFreq = System.Collections.Generic.Dictionary<string, int>;
+using TermDocFreq = Dictionary<string, int>;
 
 class Index
 {
@@ -18,20 +17,28 @@ class Index
 
     // Inverted mapping of term -> document -> term frequency in that document
     private readonly Dictionary<string, TermDocFreq> _terms = new();
-    private readonly Dictionary<string, string> _fileIds = new();
-    private readonly HashSet<string> _indexedFiles = new();
+    private readonly Dictionary<string, string> _filePaths = new(); // Id -> Path
+    private readonly Dictionary<string, string> _fileIds = new(); // Path -> Id
 
     public Index(string indexFileName)
     {
-        string jsonString = File.ReadAllText(indexFileName);
-        using JsonDocument document = JsonDocument.Parse(jsonString);
+        if (File.Exists(indexFileName))
+        {
+            string jsonString = File.ReadAllText(indexFileName);
+            using JsonDocument document = JsonDocument.Parse(jsonString);
 
-        JsonElement root = document.RootElement;
-        JsonElement termsElement = root.GetProperty("_terms");
-        _terms = JsonSerializer.Deserialize<Dictionary<string, TermDocFreq>>(termsElement)!;
+            JsonElement root = document.RootElement;
+            JsonElement termsElement = root.GetProperty("_terms");
+            _terms = JsonSerializer.Deserialize<Dictionary<string, TermDocFreq>>(termsElement)!;
 
-        JsonElement fileIdsElement = root.GetProperty("_fileIds");
-        _fileIds = JsonSerializer.Deserialize<Dictionary<string, string>>(fileIdsElement)!;
+            JsonElement filePathsElement = root.GetProperty("_filePaths");
+            _filePaths = JsonSerializer.Deserialize<Dictionary<string, string>>(filePathsElement)!;
+
+            foreach ((string fileId, string filePath) in _filePaths)
+            {
+                _fileIds.Add(filePath, fileId);
+            }
+        }
     }
 
     /// <summary>
@@ -50,20 +57,38 @@ class Index
     /// </summary>
     private void AddFile(FileInfo file)
     {
-        IFileImporter importer = _extensionToImporter[file.Extension];
-        string fileId = Guid.NewGuid().ToString("n");
-        _fileIds.Add(fileId, file.FullName);
+        string extension = file.Extension;
+        string path = file.FullName;
 
-        var tokenGroups = importer.ExtractTokens(file).GroupBy(token => token);
-        foreach (var group in tokenGroups)
+        if (!_extensionToImporter.ContainsKey(extension))
         {
-            string token = group.Key;
-            _terms.TryAdd(token, new TermDocFreq());
-            _terms[token].Add(fileId, group.Count());
+            Console.WriteLine($"SKIPPED: Unknown extension {extension}: {path}");
         }
+        else
+        {
+            string fileId;
+            if (_fileIds.ContainsKey(path))
+            {
+                fileId = _fileIds[path];
+            }
+            else
+            {
+                fileId = Guid.NewGuid().ToString("n");
+                _fileIds.Add(path, fileId);
+                _filePaths.Add(fileId, path);
+            }
 
-        _indexedFiles.Add(file.FullName);
-        Console.WriteLine($"Indexed: {file.FullName}");
+            IFileImporter importer = _extensionToImporter[extension];
+            var tokenGroups = importer.ExtractTokens(file).GroupBy(token => token);
+            foreach (var group in tokenGroups)
+            {
+                string token = group.Key;
+                _terms.TryAdd(token, new TermDocFreq());
+                _terms[token][fileId] = group.Count();
+            }
+
+            Console.WriteLine($"Indexed: {path}");
+        }
     }
 
     /// <summary>
@@ -75,16 +100,7 @@ class Index
         {
             // This path is a file
             var file = new FileInfo(path);
-            string extension = file.Extension;
-
-            if (!_extensionToImporter.ContainsKey(extension))
-            {
-                Console.WriteLine($"SKIPPED: Unknown extension {extension}: {path}");
-            }
-            else
-            {
-                AddFile(file);
-            }
+            AddFile(file);
         }
         else if (Directory.Exists(path))
         {
@@ -94,7 +110,7 @@ class Index
         }
         else
         {
-            Console.WriteLine("{0} is not a valid file or directory.", path);
+            Console.WriteLine($"{path} is not a valid file or directory.");
         }
     }
 
@@ -115,7 +131,7 @@ class Index
     public void Save()
     {
         string fileName = "index.json";
-        string jsonString = JsonSerializer.Serialize(new { _terms, _fileIds });
+        string jsonString = JsonSerializer.Serialize(new { _terms, _filePaths });
         File.WriteAllText(fileName, jsonString);
     }
 }
