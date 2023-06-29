@@ -18,7 +18,7 @@ public class TokenizerTests
     {
         var text = "    one two three    ";
         string[] expected = { "one", "two", "three" };
-        var result = _tokenizer.ExtractTokens(text);
+        var result = Tokenizer.ExtractTokens(text);
 
         CollectionAssert.AreEqual(expected, result);
     }
@@ -28,7 +28,7 @@ public class TokenizerTests
     {
         var text = "1 23 456";
         string[] expected = { "456" };
-        var result = _tokenizer.ExtractTokens(text);
+        var result = Tokenizer.ExtractTokens(text);
 
         CollectionAssert.AreEqual(expected, result);
     }
@@ -38,7 +38,7 @@ public class TokenizerTests
     {
         var text = "abc123 123abc";
         string[] expected = { "abc123", "123", "abc" };
-        var result = _tokenizer.ExtractTokens(text);
+        var result = Tokenizer.ExtractTokens(text);
 
         CollectionAssert.AreEqual(expected, result);
     }
@@ -48,7 +48,7 @@ public class TokenizerTests
     {
         var text = "hello,world!123";
         string[] expected = { "hello", "world", "123" };
-        var result = _tokenizer.ExtractTokens(text);
+        var result = Tokenizer.ExtractTokens(text);
 
         CollectionAssert.AreEqual(expected, result);
     }
@@ -58,7 +58,7 @@ public class TokenizerTests
     {
         var text = "ONE TwO threE four";
         string[] expected = { "one", "two", "three", "four" };
-        var result = _tokenizer.ExtractTokens(text);
+        var result = Tokenizer.ExtractTokens(text);
 
         CollectionAssert.AreEqual(expected, result);
     }
@@ -68,7 +68,7 @@ public class TokenizerTests
     {
         var text = "";
         string[] expected = { };
-        var result = _tokenizer.ExtractTokens(text);
+        var result = Tokenizer.ExtractTokens(text);
 
         CollectionAssert.AreEqual(expected, result);
     }
@@ -78,7 +78,7 @@ public class TokenizerTests
     {
         var text = "   ";
         string[] expected = { };
-        var result = _tokenizer.ExtractTokens(text);
+        var result = Tokenizer.ExtractTokens(text);
 
         CollectionAssert.AreEqual(expected, result);
     }

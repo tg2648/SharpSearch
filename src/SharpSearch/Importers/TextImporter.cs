@@ -9,13 +9,12 @@ public class TextImporter : IFileImporter
     /// </summary>
     public IEnumerable<string> ExtractTokens(FileInfo file)
     {
-        var tokenizer = new Tokenizer();
         using StreamReader sr = file.OpenText();
 
         string? line;
         while ((line = sr.ReadLine()) != null)
         {
-            foreach (string token in tokenizer.ExtractTokens(line))
+            foreach (string token in Tokenizer.ExtractTokens(line))
             {
                 yield return token;
             }

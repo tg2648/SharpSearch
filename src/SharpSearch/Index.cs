@@ -8,7 +8,7 @@ using TermDocFreq = System.Collections.Generic.Dictionary<string, int>;
 
 class Index
 {
-    private Dictionary<string, IFileImporter> _extensionToImporter = new()
+    private readonly Dictionary<string, IFileImporter> _extensionToImporter = new()
     {
         [".txt"] = new TextImporter(),
         [".md"] = new TextImporter(),
@@ -17,22 +17,21 @@ class Index
     };
 
     // Inverted mapping of term -> document -> term frequency in that document
-    private Dictionary<string, TermDocFreq> _terms = new();
-    private Dictionary<string, string> _fileIds = new();
-    private HashSet<string> _indexedFiles = new();
+    private readonly Dictionary<string, TermDocFreq> _terms = new();
+    private readonly Dictionary<string, string> _fileIds = new();
+    private readonly HashSet<string> _indexedFiles = new();
 
     public Index(string indexFileName)
     {
         string jsonString = File.ReadAllText(indexFileName);
-        using (JsonDocument document = JsonDocument.Parse(jsonString))
-        {
-            JsonElement root = document.RootElement;
-            JsonElement termsElement = root.GetProperty("_terms");
-            _terms = JsonSerializer.Deserialize<Dictionary<string, TermDocFreq>>(termsElement)!;
+        using JsonDocument document = JsonDocument.Parse(jsonString);
 
-            JsonElement fileIdsElement = root.GetProperty("_fileIds");
-            _fileIds = JsonSerializer.Deserialize<Dictionary<string, string>>(fileIdsElement)!;
-        }
+        JsonElement root = document.RootElement;
+        JsonElement termsElement = root.GetProperty("_terms");
+        _terms = JsonSerializer.Deserialize<Dictionary<string, TermDocFreq>>(termsElement)!;
+
+        JsonElement fileIdsElement = root.GetProperty("_fileIds");
+        _fileIds = JsonSerializer.Deserialize<Dictionary<string, string>>(fileIdsElement)!;
     }
 
     /// <summary>
@@ -116,7 +115,7 @@ class Index
     public void Save()
     {
         string fileName = "index.json";
-        string jsonString = JsonSerializer.Serialize(new { _terms = _terms, _fileIds = _fileIds });
+        string jsonString = JsonSerializer.Serialize(new { _terms, _fileIds });
         File.WriteAllText(fileName, jsonString);
     }
 }

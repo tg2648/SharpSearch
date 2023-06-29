@@ -11,8 +11,10 @@ public class SharpSearch
         var addCommand = new Command("add", "Add files or directories to the index");
         var pathsArgument = new Argument<string[]>(
             name: "paths",
-            description: "At least one path of file or directory to add to the index.");
-        pathsArgument.Arity = ArgumentArity.OneOrMore;
+            description: "At least one path of file or directory to add to the index.")
+        {
+            Arity = ArgumentArity.OneOrMore
+        };
         addCommand.AddArgument(pathsArgument);
         rootCommand.AddCommand(addCommand);
 

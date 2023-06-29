@@ -8,7 +8,7 @@ public class HTMLImporter : IFileImporter
     /// Removes HTML tags (anything between `<` and `>`) from a line of text
     /// </summary>
     /// <returns></returns>
-    private string RemoveTags(string line)
+    private static string RemoveTags(string line)
     {
         var sr = new StringReader(line);
         var sw = new StringWriter();
@@ -45,14 +45,13 @@ public class HTMLImporter : IFileImporter
     /// </summary>
     public IEnumerable<string> ExtractTokens(FileInfo file)
     {
-        var tokenizer = new Tokenizer();
         using StreamReader sr = file.OpenText();
 
         string? line;
         while ((line = sr.ReadLine()) != null)
         {
             string withoutTags = RemoveTags(line);
-            foreach (string token in tokenizer.ExtractTokens(withoutTags))
+            foreach (string token in Tokenizer.ExtractTokens(withoutTags))
             {
                 yield return token;
             }

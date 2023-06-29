@@ -4,7 +4,7 @@ public class Tokenizer
 {
     private const int LENGTH_THRESHOLD = 2;
 
-    private int TrimLeft(string text, int curr)
+    private static int TrimLeft(string text, int curr)
     {
         while (curr < text.Length && char.IsWhiteSpace(text[curr]))
             curr++;
@@ -12,7 +12,7 @@ public class Tokenizer
         return curr;
     }
 
-    private int ChopWhile(string text, int curr, Predicate<char> predicate)
+    private static int ChopWhile(string text, int curr, Predicate<char> predicate)
     {
         while (curr < text.Length && predicate(text[curr]))
             curr++;
@@ -32,7 +32,7 @@ public class Tokenizer
     ///     Non-letter or non-digit characters are tokenized as their own tokens,
     ///     which get filtered out due to length. <br/>
     /// </remarks>
-    public IEnumerable<string> ExtractTokens(string text)
+    public static IEnumerable<string> ExtractTokens(string text)
     {
         // TODO: stopword elimination
         int curr = 0;
