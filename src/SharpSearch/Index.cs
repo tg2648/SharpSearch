@@ -18,6 +18,7 @@ class Index
 
     // Inverted mapping of term -> document -> term frequency in that document
     private readonly Dictionary<string, TermDocFreq> _terms = new();
+
     private readonly Dictionary<string, string> _filePaths = new(); // Id -> Path
     private readonly Dictionary<string, string> _fileIds = new(); // Path -> Id
 
@@ -41,6 +42,8 @@ class Index
             }
         }
     }
+
+    /* Private Interface */
 
     /// <summary>
     /// Recursively adds all files in a directory to the index
@@ -93,6 +96,50 @@ class Index
     }
 
     /// <summary>
+    /// Returns paths to top N documents matching the query
+    /// </summary>
+    private IEnumerable<string> RunQuery(string query, int n = 10)
+    {
+        var scores = new Dictionary<string, int>();
+
+        foreach (string token in Tokenizer.ExtractTokens(query))
+        {
+            if (_terms.ContainsKey(token))
+            {
+                foreach ((string docId, int termCount) in _terms[token])
+                {
+                    string docPath = _filePaths[docId];
+                    if (!scores.ContainsKey(docPath))
+                        scores[docPath] = 0;
+
+                    scores[docPath] = scores[docPath] + termCount;
+                }
+            }
+        }
+
+        var result = scores
+        .OrderByDescending((kvp) => kvp.Value)
+        .Take(n)
+        .Select((kvp) => kvp.Key);
+
+        return result;
+    }
+
+    private static void DisplayQueryResults(IEnumerable<string> results)
+    {
+        Console.WriteLine("Query results:");
+
+        int idx = 1;
+        foreach (string result in results)
+        {
+            Console.WriteLine($"{idx++}. {result}");
+        }
+        Console.WriteLine();
+    }
+
+    /* Public Interface */
+
+    /// <summary>
     /// Adds provided file or directory of files into the index
     /// </summary>
     public void Add(string path)
@@ -115,6 +162,17 @@ class Index
         }
     }
 
+    /// <summary>
+    /// Removes provided file or directory of files from the index
+    /// </summary>
+    public void Remove(string path)
+    {
+        throw new NotImplementedException();
+    }
+
+    /// <summary>
+    /// Prints statistics about the index
+    /// </summary>
     public void Info()
     {
         Console.WriteLine("Indexed files:");
@@ -129,6 +187,9 @@ class Index
         }
     }
 
+    /// <summary>
+    /// Saves index to disk
+    /// </summary>
     public void Save()
     {
         string fileName = "index.json";
@@ -137,9 +198,20 @@ class Index
     }
 
     /// <summary>
-    /// Returns top N documents matching the query
+    /// Prints paths to top N documents matching the query
     /// </summary>
     public void Query(string query, int n = 10)
     {
+        IEnumerable<string> results = RunQuery(query, n);
+        DisplayQueryResults(results);
+    }
+
+    /// <summary>
+    /// Re-indexes any files in the index that have been modified
+    /// since they were last added to the index.
+    /// </summary>
+    public void Refresh()
+    {
+        throw new NotImplementedException();
     }
 }

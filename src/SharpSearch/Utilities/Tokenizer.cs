@@ -28,7 +28,7 @@ public class Tokenizer
     /// </returns>
     /// <remarks>
     ///     123abc is tokenized as 123 and abc <br/>
-    ///     abc123 is tokenized as abc and 123 <br/>
+    ///     abc123 is tokenized as abc123 <br/>
     ///     Non-letter or non-digit characters are tokenized as their own tokens,
     ///     which get filtered out due to length. <br/>
     /// </remarks>
