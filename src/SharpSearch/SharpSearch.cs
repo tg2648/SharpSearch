@@ -8,22 +8,18 @@ public class SharpSearch
     {
         var rootCommand = new RootCommand("SharpSearch Local Search Engine");
 
-        var addCommand = new Command("add", "Add files or directories to the index");
+        string indexFileName = "index.json";
+        Index index = new(indexFileName);
+
+        /* ADD */
+        var addCommand = new Command("add", "Add files or directories to the index.");
         var pathsArgument = new Argument<string[]>(
             name: "paths",
-            description: "At least one path of file or directory to add to the index.")
+            description: "At least one path to file or directory to add to the index.")
         {
             Arity = ArgumentArity.OneOrMore
         };
         addCommand.AddArgument(pathsArgument);
-        rootCommand.AddCommand(addCommand);
-
-        var infoCommand = new Command("info", "Information about indexed files");
-        rootCommand.AddCommand(infoCommand);
-
-        string indexFileName = "index.json";
-        Index index = new(indexFileName);
-
         addCommand.SetHandler((paths) =>
         {
             foreach (var path in paths)
@@ -32,8 +28,28 @@ public class SharpSearch
             }
             index.Save();
         }, pathsArgument);
+        rootCommand.AddCommand(addCommand);
 
-        infoCommand.SetHandler(() => index.Info());
+        /* QUERY */
+        var queryCommand = new Command("query", "Return documents in the index best matching the query.");
+        var queryArgument = new Argument<string>(name: "query");
+        var nOption = new Option<int>
+            (name: "--n",
+            description: "Number of documents to return.",
+            getDefaultValue: () => 42);
+        queryCommand.AddArgument(queryArgument);
+        queryCommand.AddOption(nOption);
+        queryCommand.SetHandler((query, nOption) =>
+        {
+            Stopwatcher.Time(() => index.Query(query, nOption), "Queried the index in");
+        }, queryArgument, nOption);
+        rootCommand.AddCommand(queryCommand);
+
+        /* INFO */
+        var infoCommand = new Command("info", "Return index statistics.");
+        infoCommand.SetHandler(index.Info);
+        rootCommand.AddCommand(infoCommand);
+
         return await rootCommand.InvokeAsync(args);
     }
 }

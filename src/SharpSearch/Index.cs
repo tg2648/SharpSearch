@@ -1,5 +1,6 @@
 using System.Text.Json;
 using SharpSearch.Importers;
+using SharpSearch.Utilities;
 
 namespace SharpSearch;
 
@@ -133,5 +134,12 @@ class Index
         string fileName = "index.json";
         string jsonString = JsonSerializer.Serialize(new { _terms, _filePaths });
         File.WriteAllText(fileName, jsonString);
+    }
+
+    /// <summary>
+    /// Returns top N documents matching the query
+    /// </summary>
+    public void Query(string query, int n = 10)
+    {
     }
 }
