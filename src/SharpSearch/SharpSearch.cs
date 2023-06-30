@@ -6,7 +6,7 @@ public class SharpSearch
 {
     public static async Task<int> Main(string[] args)
     {
-        var rootCommand = new RootCommand("SharpSearch File Index");
+        var rootCommand = new RootCommand("SharpSearch Local Search Engine");
 
         var addCommand = new Command("add", "Add files or directories to the index");
         var pathsArgument = new Argument<string[]>(
