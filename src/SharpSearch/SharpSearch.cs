@@ -13,22 +13,45 @@ public class SharpSearch
 
         /* ADD */
         var addCommand = new Command("add", "Add files or directories to the index.");
-        var pathsArgument = new Argument<string[]>(
+        var addPathsArgument = new Argument<string[]>(
             name: "paths",
             description: "At least one path to file or directory to add to the index.")
         {
             Arity = ArgumentArity.OneOrMore
         };
-        addCommand.AddArgument(pathsArgument);
+        addCommand.AddArgument(addPathsArgument);
         addCommand.SetHandler((paths) =>
         {
-            foreach (var path in paths)
-            {
-                Stopwatcher.Time(() => index.Add(path), "Added file(s) to index in");
-            }
+            Stopwatcher.Time(() => {
+                foreach (var path in paths)
+                {
+                    index.Add(path);
+                }
+            }, "Added file(s) to index in");
             index.Save();
-        }, pathsArgument);
+        }, addPathsArgument);
         rootCommand.AddCommand(addCommand);
+
+        /* REMOVE */
+        var removeCommand = new Command("remove", "Remove file or directory from the index.");
+        var removePathsArgument = new Argument<string[]>(
+            name: "paths",
+            description: "At least one path to file or directory to remove from the index.")
+        {
+            Arity = ArgumentArity.OneOrMore
+        };
+        removeCommand.AddArgument(removePathsArgument);
+        removeCommand.SetHandler((paths) =>
+        {
+            Stopwatcher.Time(() => {
+                foreach (var path in paths)
+                {
+                    index.Remove(path);
+                }
+            }, "Removed file(s) from index in");
+            index.Save();
+        }, removePathsArgument);
+        rootCommand.AddCommand(removeCommand);
 
         /* QUERY */
         var queryCommand = new Command("query", "Return documents in the index best matching the query.");
