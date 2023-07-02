@@ -1,5 +1,4 @@
 using SharpSearch.Utilities;
-
 namespace SharpSearch.UnitTests.Utilities;
 
 [TestFixture]
