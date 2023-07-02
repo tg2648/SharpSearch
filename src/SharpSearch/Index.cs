@@ -138,46 +138,76 @@ class Index
         }
     }
 
+    private double GetTf(string term, string docId)
+    {
+        int tf = _terms[term].GetValueOrDefault(docId, 0);
+        // return tf / (double)_files[docId].Length;
+        return Math.Log10(1 + tf);
+    }
+
+    private double GetIdf(string term)
+    {
+        int N = _files.Count;
+        int df = _terms[term].Count;
+
+        return Math.Log10(N / df);
+    }
+
+    private double CalculateTfIdf(string term, string docId)
+    {
+        return GetTf(term, docId) * GetIdf(term);
+    }
+
     /// <summary>
     ///     Returns paths to top N documents matching the query
     /// </summary>
     private IEnumerable<string> RunQuery(string query, int n = 10)
     {
-        var scores = new Dictionary<string, int>();
+        var scores = new Dictionary<string, double>();
 
         foreach (string token in Tokenizer.ExtractTokens(query))
         {
             if (_terms.ContainsKey(token))
             {
+                // Increment the score for each document that has the term
                 foreach ((string docId, int termCount) in _terms[token])
                 {
                     string docPath = _files[docId].Path;
                     if (!scores.ContainsKey(docPath))
                         scores[docPath] = 0;
 
-                    scores[docPath] = scores[docPath] + termCount;
+                    scores[docPath] = scores[docPath] + CalculateTfIdf(token, docId);
                 }
             }
         }
 
+        // Length-normalize using document length
+        foreach ((string docPath, double score) in scores)
+        {
+            string docId = _fileIds[docPath];
+            scores[docPath] = scores[docPath] / _files[docId].Length;
+        }
+
+        double maxScore = scores.Values.Max();
+
         var result = scores
         .OrderByDescending((kvp) => kvp.Value)
         .Take(n)
-        .Select((kvp) => kvp.Key);
+        .Select((kvp) => $"[{kvp.Value}] {kvp.Key}");
+        // .Select((kvp) => $"[{Math.Round(kvp.Value / maxScore * 100d, 2)}%] {kvp.Key}");
 
         return result;
     }
 
     private static void DisplayQueryResults(IEnumerable<string> results)
     {
-        Console.WriteLine("Query results:");
+        Console.WriteLine("Query results (including relative relevance):");
 
         int idx = 1;
         foreach (string result in results)
         {
             Console.WriteLine($"{idx++}. {result}");
         }
-        Console.WriteLine();
     }
 
     /* Public Interface */
