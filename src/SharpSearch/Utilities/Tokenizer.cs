@@ -4,6 +4,8 @@ public class Tokenizer
 {
     private const int LENGTH_THRESHOLD = 2;
 
+    private Tokenizer() { }
+
     private static int TrimLeft(string text, int curr)
     {
         while (curr < text.Length && char.IsWhiteSpace(text[curr]))

@@ -4,14 +4,6 @@ namespace SharpSearch.UnitTests.Utilities;
 [TestFixture]
 public class TokenizerTests
 {
-    private Tokenizer _tokenizer = null!;
-
-    [OneTimeSetUp]
-    public void SetUp()
-    {
-        _tokenizer = new Tokenizer();
-    }
-
     [Test]
     public void ExtractTokens_LettersOnly_ReturnsTokens()
     {
