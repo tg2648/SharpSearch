@@ -9,6 +9,8 @@ class InfoCommand : ICommand
     public InfoCommand(Index index)
     {
         Command = new Command("info", "Return index statistics");
-        Command.SetHandler(index.Info);
+        Command.SetHandler(() => {
+            Console.WriteLine(index.GetInfo());
+        });
     }
 }

@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 using SharpSearch.Importers;
 using SharpSearch.Utilities;
@@ -258,20 +259,23 @@ class Index
     }
 
     /// <summary>
-    ///     Prints statistics about the index
+    ///     Returns text with statistics about the index
     /// </summary>
-    public void Info()
+    public string GetInfo()
     {
-        Console.WriteLine("Indexed files:");
+        var info = new StringBuilder();
+        info.AppendLine("Indexed files:");
 
         foreach (var (term, tf) in _terms)
         {
-            Console.WriteLine(term);
+            info.AppendLine(term);
             foreach (var (doc, freq) in tf)
             {
-                Console.WriteLine($"  {doc}: {freq}");
+                info.AppendLine($"  {doc}: {freq}");
             }
         }
+
+        return info.ToString();
     }
 
     /// <summary>
