@@ -21,7 +21,18 @@ class RemoveCommand : ICommand
             Stopwatcher.Time(() => {
                 foreach (var path in paths)
                 {
-                    index.Remove(path);
+                    try
+                    {
+                        index.Remove(path);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine($"ERROR: {e.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"ERROR: {e.Message}");
+                    }
                 }
             }, "Removed from index in");
             index.Save();

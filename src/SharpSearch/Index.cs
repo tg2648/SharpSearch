@@ -231,7 +231,7 @@ class Index
         }
         else
         {
-            Console.WriteLine($"Cannot add: {path} is not a valid file or directory.");
+            throw new ArgumentException($"{path} is not a valid file or directory.");
         }
     }
 
@@ -253,7 +253,7 @@ class Index
         }
         else
         {
-            Console.WriteLine($"Cannot remove: {path} is not a valid file or directory.");
+            throw new ArgumentException($"{path} is not a valid file or directory.");
         }
     }
 

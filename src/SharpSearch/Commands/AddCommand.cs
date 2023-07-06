@@ -21,7 +21,18 @@ class AddCommand : ICommand
             Stopwatcher.Time(() => {
                 foreach (var path in paths)
                 {
-                    index.Add(path);
+                    try
+                    {
+                        index.Add(path);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Console.WriteLine($"ERROR: {e.Message}");
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"ERROR: {e.Message}");
+                    }
                 }
             }, "Added to index in");
             index.Save();
