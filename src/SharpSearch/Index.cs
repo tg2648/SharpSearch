@@ -9,6 +9,7 @@ using TermDocFreq = Dictionary<string, int>;
 
 class Index
 {
+    private readonly string _indexPath;
     private readonly Dictionary<string, IFileImporter> _extensionToImporter = new()
     {
         [".txt"] = new TextImporter(),
@@ -22,11 +23,16 @@ class Index
     private readonly Dictionary<string, Document> _files = new(); // Id -> Document
     private readonly Dictionary<string, string> _fileIds = new(); // Path -> Id
 
-    public Index(string indexFileName)
+    public Index(string indexPath)
     {
-        if (File.Exists(indexFileName))
+        _indexPath = indexPath;
+        string jsonString = File.ReadAllText(indexPath);
+
+        if (jsonString == string.Empty)
+            return;
+
+        try
         {
-            string jsonString = File.ReadAllText(indexFileName);
             using JsonDocument document = JsonDocument.Parse(jsonString);
 
             JsonElement root = document.RootElement;
@@ -40,6 +46,11 @@ class Index
             {
                 _fileIds.Add(doc.Path, fileId);
             }
+        }
+        catch (Exception e) when (e is JsonException || e is KeyNotFoundException)
+        {
+            // Something went wrong with parsing/deserializing JSON
+            throw new ApplicationException($"Index file located in {indexPath} is invalid. Please try re-creating the index.");
         }
     }
 
@@ -189,7 +200,7 @@ class Index
             scores[docPath] = scores[docPath] / _files[docId].Length;
         }
 
-        double maxScore = scores.Values.Max();
+        double maxScore = scores.Count > 0 ? scores.Values.Max() : -1;
 
         var result = scores
         .OrderByDescending((kvp) => kvp.Value)
@@ -200,9 +211,9 @@ class Index
         return result;
     }
 
-    private static void DisplayQueryResults(IEnumerable<string> results)
+    private static void PrintQueryResults(string query, IEnumerable<string> results)
     {
-        Console.WriteLine("Query results (including relative relevance):");
+        Console.WriteLine($"Query results for \"{query}\" (including relative relevance):");
 
         int idx = 1;
         foreach (string result in results)
@@ -283,9 +294,8 @@ class Index
     /// </summary>
     public void Save()
     {
-        string fileName = "index.json";
         string jsonString = JsonSerializer.Serialize(new { _terms, _files });
-        File.WriteAllText(fileName, jsonString);
+        File.WriteAllText(_indexPath, jsonString);
     }
 
     /// <summary>
@@ -294,7 +304,7 @@ class Index
     public void Query(string query, int n = 10)
     {
         IEnumerable<string> results = RunQuery(query, n);
-        DisplayQueryResults(results);
+        PrintQueryResults(query, results);
     }
 
     /// <summary>
