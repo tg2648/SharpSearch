@@ -18,7 +18,7 @@ class QueryCommand : ICommand
         Command.AddOption(nOption);
         Command.SetHandler((query, nOption) =>
         {
-            Stopwatcher.Time(() => index.Query(query, nOption), "Queried the index in");
+            Stopwatcher.Time(() => index.Query(query, nOption), "Queried index in");
         }, queryArgument, nOption);
     }
 }

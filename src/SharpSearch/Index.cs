@@ -9,6 +9,9 @@ using TermDocFreq = Dictionary<string, int>;
 
 class Index
 {
+    private const string INDEX_NAME = "index.json";
+    private const string INDEX_DIR = "SharpSearch";
+    private const string INDEX_IS_EMPTY_MSG = "Index is empty";
     private readonly string _indexPath;
     private readonly Dictionary<string, IFileImporter> _extensionToImporter = new()
     {
@@ -19,13 +22,51 @@ class Index
     };
 
     // Inverted mapping of term -> document -> term frequency in that document
-    private readonly Dictionary<string, TermDocFreq> _terms = new();
-    private readonly Dictionary<string, Document> _files = new(); // Id -> Document
+    private Dictionary<string, TermDocFreq> _terms = new();
+    private Dictionary<string, Document> _files = new(); // Id -> Document
     private readonly Dictionary<string, string> _fileIds = new(); // Path -> Id
 
-    public Index(string indexPath)
+    public Index(string? indexPath = default)
     {
-        _indexPath = indexPath;
+        // Use existing index or initialize a new one
+        _indexPath = indexPath ?? Initialize();
+        ParseIndexFile(_indexPath);
+    }
+
+    /* Private Interface */
+
+    /// <summary>
+    ///     Creates a blank index file if one does not exist in the ApplicationData folder.
+    /// </summary>
+    /// <returns>
+    ///     Path to the index file
+    /// </returns>
+    private static string Initialize()
+    {
+        string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+        string indexPath = Path.Combine(appDataFolder, INDEX_DIR, INDEX_NAME);
+
+        if (!File.Exists(indexPath))
+        {
+            string? indexDir = Path.GetDirectoryName(indexPath);
+            Console.WriteLine($"Existing index not found in {indexDir}");
+
+            if (indexDir == null || indexDir == string.Empty)
+            {
+                throw new ApplicationException($"Cannot initialize index file in {indexPath}");
+            }
+
+            Directory.CreateDirectory(indexDir);
+            FileStream indexFile = File.Create(indexPath);
+            indexFile.Dispose();
+
+            Console.WriteLine($"Initialized new index in {indexPath}");
+        }
+
+        return indexPath;
+    }
+
+    private void ParseIndexFile(string indexPath) {
         string jsonString = File.ReadAllText(indexPath);
 
         if (jsonString == string.Empty)
@@ -37,6 +78,7 @@ class Index
 
             JsonElement root = document.RootElement;
             JsonElement termsElement = root.GetProperty(nameof(_terms));
+
             _terms = JsonSerializer.Deserialize<Dictionary<string, TermDocFreq>>(termsElement)!;
 
             JsonElement filePathsElement = root.GetProperty(nameof(_files));
@@ -53,8 +95,6 @@ class Index
             throw new ApplicationException($"Index file located in {indexPath} is invalid. Please try re-creating the index.");
         }
     }
-
-    /* Private Interface */
 
     /// <summary>
     ///     Recursively adds all files in a directory to the index
@@ -274,6 +314,11 @@ class Index
     /// </summary>
     public string GetInfo()
     {
+        if (_terms.Count == 0)
+        {
+            return INDEX_IS_EMPTY_MSG;
+        }
+
         var info = new StringBuilder();
         info.AppendLine("Indexed files:");
 
@@ -303,8 +348,15 @@ class Index
     /// </summary>
     public void Query(string query, int n = 10)
     {
-        IEnumerable<string> results = RunQuery(query, n);
-        PrintQueryResults(query, results);
+        if (_terms.Count == 0)
+        {
+            Console.WriteLine(INDEX_IS_EMPTY_MSG);
+        }
+        else
+        {
+            IEnumerable<string> results = RunQuery(query, n);
+            PrintQueryResults(query, results);
+        }
     }
 
     /// <summary>
