@@ -1,4 +1,5 @@
 using System.CommandLine;
+using SharpSearch.Indices;
 
 namespace SharpSearch.Commands;
 
@@ -6,7 +7,7 @@ class CommandRepository
 {
     public IList<Command> Commands { get; }
 
-    public CommandRepository(Index index)
+    public CommandRepository(IIndex index)
     {
         Commands = new List<Command>()
         {

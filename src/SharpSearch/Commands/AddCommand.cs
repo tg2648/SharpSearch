@@ -1,4 +1,5 @@
 using System.CommandLine;
+using SharpSearch.Indices;
 
 namespace SharpSearch.Commands;
 
@@ -6,7 +7,7 @@ class AddCommand : ICommand
 {
     public Command Command { get; }
 
-    public AddCommand(Index index)
+    public AddCommand(IIndex index)
     {
         Command = new Command("add", "Add files or directories to the index");
         var addPathsArgument = new Argument<string[]>(

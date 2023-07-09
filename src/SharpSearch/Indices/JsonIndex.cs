@@ -1,18 +1,20 @@
 using System.Text;
 using System.Text.Json;
 using SharpSearch.Importers;
+using SharpSearch.Models;
 using SharpSearch.Utilities;
 
-namespace SharpSearch;
+namespace SharpSearch.Indices;
 
 using TermDocFreq = Dictionary<string, int>;
 
-class Index
+class JsonIndex : IIndex
 {
     private const string INDEX_NAME = "index.json";
     private const string INDEX_DIR = "SharpSearch";
-    private const string INDEX_IS_EMPTY_MSG = "Index is empty";
     private readonly string _indexPath;
+    private IModel? _model;
+
     private readonly Dictionary<string, IFileImporter> _extensionToImporter = new()
     {
         [".txt"] = new TextImporter(),
@@ -26,7 +28,7 @@ class Index
     private Dictionary<string, Document> _files = new(); // Id -> Document
     private readonly Dictionary<string, string> _fileIds = new(); // Path -> Id
 
-    public Index(string? indexPath = default)
+    public JsonIndex(string? indexPath = default)
     {
         // Use existing index or initialize a new one
         _indexPath = indexPath ?? Initialize();
@@ -190,83 +192,13 @@ class Index
         }
     }
 
-    private double GetTf(string term, string docId)
-    {
-        int tf = _terms[term].GetValueOrDefault(docId, 0);
-        // return tf / (double)_files[docId].Length;
-        return Math.Log10(1 + tf);
-    }
-
-    private double GetIdf(string term)
-    {
-        int N = _files.Count;
-        int df = _terms[term].Count;
-
-        return Math.Log10(N / df);
-    }
-
-    private double CalculateTfIdf(string term, string docId)
-    {
-        return GetTf(term, docId) * GetIdf(term);
-    }
-
-    /// <summary>
-    ///     Returns paths to top N documents matching the query
-    /// </summary>
-    private IEnumerable<string> RunQuery(string query, int n = 10)
-    {
-        var scores = new Dictionary<string, double>();
-
-        foreach (string token in Tokenizer.ExtractTokens(query))
-        {
-            if (_terms.ContainsKey(token))
-            {
-                // Increment the score for each document that has the term
-                foreach ((string docId, int termCount) in _terms[token])
-                {
-                    string docPath = _files[docId].Path;
-                    if (!scores.ContainsKey(docPath))
-                        scores[docPath] = 0;
-
-                    scores[docPath] = scores[docPath] + CalculateTfIdf(token, docId);
-                }
-            }
-        }
-
-        // Length-normalize using document length
-        foreach ((string docPath, double score) in scores)
-        {
-            string docId = _fileIds[docPath];
-            scores[docPath] = scores[docPath] / _files[docId].Length;
-        }
-
-        double maxScore = scores.Count > 0 ? scores.Values.Max() : -1;
-
-        var result = scores
-        .OrderByDescending((kvp) => kvp.Value)
-        .Take(n)
-        .Select((kvp) => $"[{kvp.Value}] {kvp.Key}");
-        // .Select((kvp) => $"[{Math.Round(kvp.Value / maxScore * 100d, 2)}%] {kvp.Key}");
-
-        return result;
-    }
-
-    private static void PrintQueryResults(string query, IEnumerable<string> results)
-    {
-        Console.WriteLine($"Query results for \"{query}\" (including relative relevance):");
-
-        int idx = 1;
-        foreach (string result in results)
-        {
-            Console.WriteLine($"{idx++}. {result}");
-        }
-    }
-
     /* Public Interface */
 
-    /// <summary>
-    ///     Adds provided file or directory of files into the index
-    /// </summary>
+    public void SetModel(IModel model)
+    {
+        _model = model;
+    }
+
     public void Add(string path)
     {
         if (File.Exists(path))
@@ -287,9 +219,6 @@ class Index
         }
     }
 
-    /// <summary>
-    ///     Removes provided file or directory of files from the index
-    /// </summary>
     public void Remove(string path)
     {
         if (File.Exists(path))
@@ -309,62 +238,65 @@ class Index
         }
     }
 
-    /// <summary>
-    ///     Returns text with statistics about the index
-    /// </summary>
-    public string GetInfo()
+    public IndexInfo GetInfo()
     {
-        if (_terms.Count == 0)
-        {
-            return INDEX_IS_EMPTY_MSG;
-        }
-
-        var info = new StringBuilder();
-        info.AppendLine("Indexed files:");
-
-        foreach (var (term, tf) in _terms)
-        {
-            info.AppendLine(term);
-            foreach (var (doc, freq) in tf)
-            {
-                info.AppendLine($"  {doc}: {freq}");
-            }
-        }
-
-        return info.ToString();
+        return new IndexInfo(DocumentCount: _files.Count);
     }
 
-    /// <summary>
-    ///     Saves index to disk
-    /// </summary>
     public void Save()
     {
         string jsonString = JsonSerializer.Serialize(new { _terms, _files });
         File.WriteAllText(_indexPath, jsonString);
     }
 
-    /// <summary>
-    ///     Prints paths to top N documents matching the query
-    /// </summary>
-    public void Query(string query, int n = 10)
+    public IEnumerable<DocumentScore> CalculateDocumentScores(string query)
     {
-        if (_terms.Count == 0)
+       var scores = new Dictionary<string, double>();
+
+        foreach (string token in Tokenizer.ExtractTokens(query))
         {
-            Console.WriteLine(INDEX_IS_EMPTY_MSG);
+            if (_terms.ContainsKey(token))
+            {
+                // Increment the score for each document that has the term
+                foreach ((string docId, int termCount) in _terms[token])
+                {
+                    string docPath = _files[docId].Path;
+                    if (!scores.ContainsKey(docPath))
+                        scores[docPath] = 0;
+
+                    scores[docPath] = scores[docPath] + _model!.CalculateScore(token, _files[docId]);
+                }
+            }
         }
-        else
+
+        // Length-normalize using document length
+        foreach ((string docPath, double score) in scores)
         {
-            IEnumerable<string> results = RunQuery(query, n);
-            PrintQueryResults(query, results);
+            string docId = _fileIds[docPath];
+            scores[docPath] = scores[docPath] / _files[docId].Length;
         }
+
+        double maxScore = scores.Count > 0 ? scores.Values.Max() : -1;
+
+        var result = scores
+        .OrderByDescending((kvp) => kvp.Value)
+        .Select((kvp) => new DocumentScore(Path: kvp.Key, Score: kvp.Value));
+
+        return result;
     }
 
-    /// <summary>
-    ///     Re-indexes any files in the index that have been modified
-    ///     since they were last added to the index.
-    /// </summary>
     public void Refresh()
     {
         throw new NotImplementedException();
+    }
+
+    public int GetTermFrequency(string term, Document d)
+    {
+        return _terms[term].GetValueOrDefault(_fileIds[d.Path], 0);
+    }
+
+    public int GetDocumentFrequency(string term)
+    {
+        return _terms[term].Count;
     }
 }

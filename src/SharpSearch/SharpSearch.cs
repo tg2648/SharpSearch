@@ -1,5 +1,8 @@
 ﻿using System.CommandLine;
 using SharpSearch.Commands;
+using SharpSearch.Indices;
+using SharpSearch.Models;
+using JsonIndex = SharpSearch.Indices.JsonIndex;
 
 namespace SharpSearch;
 
@@ -10,7 +13,11 @@ public class SharpSearch
         var rootCommand = new RootCommand("SharpSearch Local Search Engine");
         try
         {
-            Index index = Stopwatcher.Time<Index>(() => new(), "Loaded index in");
+            IIndex index = Stopwatcher.Time<JsonIndex>(() => new(), "Loaded index in");
+            IModel model = new TfIdfModel();
+
+            index.SetModel(model);
+            model.SetIndex(index);
 
             foreach (var command in new CommandRepository(index).Commands)
             {

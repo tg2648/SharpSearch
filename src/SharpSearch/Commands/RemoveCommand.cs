@@ -1,4 +1,5 @@
 using System.CommandLine;
+using SharpSearch.Indices;
 
 namespace SharpSearch.Commands;
 
@@ -6,7 +7,7 @@ class RemoveCommand : ICommand
 {
     public Command Command { get; }
 
-    public RemoveCommand(Index index)
+    public RemoveCommand(IIndex index)
     {
         Command = new Command("remove", "Remove file or directory from the index");
         var removePathsArgument = new Argument<string[]>(

@@ -1,4 +1,7 @@
 using System.CommandLine;
+using SharpSearch.Indices;
+using SharpSearch.Models;
+using SharpSearch.Utilities;
 
 namespace SharpSearch.Commands;
 
@@ -6,7 +9,7 @@ class QueryCommand : ICommand
 {
     public Command Command { get; }
 
-    public QueryCommand(Index index)
+    public QueryCommand(IIndex index)
     {
         Command = new Command("query", "Return documents in the index best matching the query");
         var queryArgument = new Argument<string>(name: "query", description: "Query terms to search for");
@@ -18,7 +21,10 @@ class QueryCommand : ICommand
         Command.AddOption(nOption);
         Command.SetHandler((query, nOption) =>
         {
-            Stopwatcher.Time(() => index.Query(query, nOption), "Queried index in");
+            Stopwatcher.Time(() => {
+                IEnumerable<DocumentScore> results = index.CalculateDocumentScores(query);
+                QueryResultPrinter.PrintResults(query, results, nOption);
+            }, "Queried index in");
         }, queryArgument, nOption);
     }
 }
