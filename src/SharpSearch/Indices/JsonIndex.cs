@@ -125,9 +125,8 @@ class JsonIndex : IIndex
         {
             IFileImporter importer = _extensionToImporter[extension];
             IEnumerable<string> tokens = importer.ExtractTokens(file);
-            int documentLength = tokens.Count();
-            var tokenGroups = tokens.GroupBy(token => token);
 
+            int documentLength = tokens.Count();
             string fileId;
             if (_fileIds.ContainsKey(path))
             {
@@ -140,6 +139,8 @@ class JsonIndex : IIndex
                 _files.Add(fileId, new Document(path, documentLength, file.LastWriteTimeUtc));
             }
 
+            // Calculate and store term frequencies for the document
+            var tokenGroups = tokens.GroupBy(token => token);
             foreach (var group in tokenGroups)
             {
                 string token = group.Key;
