@@ -3,7 +3,7 @@ using SharpSearch.Indices;
 
 namespace SharpSearch.Commands;
 
-class RemoveCommand : ICommand
+public class RemoveCommand : ICommand
 {
     public Command Command { get; }
 
@@ -19,7 +19,8 @@ class RemoveCommand : ICommand
         Command.AddArgument(removePathsArgument);
         Command.SetHandler((paths) =>
         {
-            Stopwatcher.Time(() => {
+            Stopwatcher.Time(() =>
+            {
                 foreach (var path in paths)
                 {
                     try

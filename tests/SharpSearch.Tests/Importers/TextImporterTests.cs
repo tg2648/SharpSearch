@@ -1,9 +1,9 @@
 using SharpSearch.Importers;
 
-namespace SharpSearch.UnitTests.Importers;
+namespace SharpSearch.Tests.Importers;
 
 [TestFixture]
-public class HTMLImporterTests
+public class TextImporterTests
 {
     FileInfo? file;
 
@@ -24,12 +24,12 @@ public class HTMLImporterTests
     {
         using (StreamWriter sw = file!.AppendText())
         {
-            sw.WriteLine("<p>Hello <span>one</span></p>");
-            sw.WriteLine("<b>two three</b>");
+            sw.WriteLine("Hello one");
+            sw.WriteLine("two three");
         }
         var expected = new string[] { "hello", "one", "two", "three" };
 
-        var importer = new HTMLImporter();
+        var importer = new TextImporter();
         var result = importer.ExtractTokens(file).ToArray();
 
         CollectionAssert.AreEqual(expected, result);

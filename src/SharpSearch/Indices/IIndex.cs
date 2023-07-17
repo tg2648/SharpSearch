@@ -2,7 +2,7 @@ using SharpSearch.Models;
 
 namespace SharpSearch.Indices;
 
-interface IIndex
+public interface IIndex
 {
     /// <summary>
     ///     Adds file or directory to the index.

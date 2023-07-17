@@ -1,6 +1,6 @@
 using SharpSearch.Models;
 using SharpSearch.Utilities;
-namespace SharpSearch.UnitTests.Utilities;
+namespace SharpSearch.Tests.Utilities;
 
 [TestFixture]
 public class QueryResultPrinterTests

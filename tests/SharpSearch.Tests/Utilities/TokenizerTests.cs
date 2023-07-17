@@ -1,5 +1,5 @@
 using SharpSearch.Utilities;
-namespace SharpSearch.UnitTests.Utilities;
+namespace SharpSearch.Tests.Utilities;
 
 [TestFixture]
 public class TokenizerTests
