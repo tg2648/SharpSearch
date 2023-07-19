@@ -4,7 +4,6 @@ namespace SharpSearch.Models;
 
 public interface IModel
 {
-    public void SetIndex(IIndex index);
-
+    public IIndex? Index { get; set; }
     public double CalculateScore(string t, Document d);
 }

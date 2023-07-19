@@ -13,17 +13,17 @@ public class QueryResultPrinterTests
     {
         testData = new List<DocumentScore>()
         {
-            new DocumentScore("a", 0.01123),
-            new DocumentScore("b", 0.02123),
-            new DocumentScore("c", 0.03123),
-            new DocumentScore("d", 0.04123),
-            new DocumentScore("e", 0.05123),
-            new DocumentScore("f", 0.06123),
-            new DocumentScore("g", 0.07123),
-            new DocumentScore("h", 0.08123),
-            new DocumentScore("i", 0.09123),
-            new DocumentScore("j", 0.10123),
-            new DocumentScore("k", 0.11123),
+            new DocumentScore(new Document("a", 1, DateTime.Now), 0.01123),
+            new DocumentScore(new Document("b", 1, DateTime.Now), 0.02123),
+            new DocumentScore(new Document("c", 1, DateTime.Now), 0.03123),
+            new DocumentScore(new Document("d", 1, DateTime.Now), 0.04123),
+            new DocumentScore(new Document("e", 1, DateTime.Now), 0.05123),
+            new DocumentScore(new Document("f", 1, DateTime.Now), 0.06123),
+            new DocumentScore(new Document("g", 1, DateTime.Now), 0.07123),
+            new DocumentScore(new Document("h", 1, DateTime.Now), 0.08123),
+            new DocumentScore(new Document("i", 1, DateTime.Now), 0.09123),
+            new DocumentScore(new Document("j", 1, DateTime.Now), 0.10123),
+            new DocumentScore(new Document("k", 1, DateTime.Now), 0.11123),
         };
     }
 

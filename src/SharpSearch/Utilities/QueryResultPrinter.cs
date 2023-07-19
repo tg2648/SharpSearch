@@ -13,7 +13,7 @@ public class QueryResultPrinter
         int idx = 1;
         foreach (DocumentScore score in results.Take(n))
         {
-            Console.WriteLine($"{idx++}. [{Math.Round(score.Score, 2)}] {score.Path}");
+            Console.WriteLine($"{idx++}. [{Math.Round(score.Score, 2)}] {score.Document.Path}");
         }
     }
 }

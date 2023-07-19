@@ -5,6 +5,11 @@ namespace SharpSearch.Indices;
 public interface IIndex
 {
     /// <summary>
+    ///     A model that is responsible for calculating document scores
+    /// </summary>
+    public IModel? Model { get; set; }
+
+    /// <summary>
     ///     Adds file or directory to the index.
     /// </summary>
     public void Add(string path);
@@ -43,9 +48,4 @@ public interface IIndex
     ///     Returns the number of documents where term `t` appears at least once.
     /// </summary>
     public int GetDocumentFrequency(string t);
-
-    /// <summary>
-    ///     Assigns a given model to be responsible for calculating scores
-    /// </summary>
-    public void SetModel(IModel model);
 }
