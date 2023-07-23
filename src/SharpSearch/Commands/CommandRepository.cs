@@ -3,7 +3,7 @@ using SharpSearch.Indices;
 
 namespace SharpSearch.Commands;
 
-class CommandRepository
+public class CommandRepository
 {
     public IList<Command> Commands { get; }
 

@@ -2,9 +2,8 @@ using SharpSearch.Indices;
 
 namespace SharpSearch.Models;
 
-interface IModel
+public interface IModel
 {
-    public void SetIndex(IIndex index);
-
+    public IIndex? Index { get; set; }
     public double CalculateScore(string t, Document d);
 }

@@ -5,7 +5,7 @@ using SharpSearch.Utilities;
 
 namespace SharpSearch.Commands;
 
-class QueryCommand : ICommand
+public class QueryCommand : ICommand
 {
     public Command Command { get; }
 
@@ -21,7 +21,8 @@ class QueryCommand : ICommand
         Command.AddOption(nOption);
         Command.SetHandler((query, nOption) =>
         {
-            Stopwatcher.Time(() => {
+            Stopwatcher.Time(() =>
+            {
                 IEnumerable<DocumentScore> results = index.CalculateDocumentScores(query);
                 QueryResultPrinter.PrintResults(query, results, nOption);
             }, "Queried index in");

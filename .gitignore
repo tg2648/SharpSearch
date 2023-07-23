@@ -160,6 +160,9 @@ coverage*.info
 *.coverage
 *.coveragexml
 
+# ReportGenerator reports
+CoverageReport/
+
 # NCrunch
 _NCrunch_*
 .*crunch*.local.xml

@@ -8,16 +8,21 @@ namespace SharpSearch;
 
 public class SharpSearch
 {
+    private const string INDEX_NAME = "index.json";
+    private const string INDEX_DIR = "SharpSearch";
+
     public static async Task<int> Main(string[] args)
     {
         var rootCommand = new RootCommand("SharpSearch Local Search Engine");
         try
         {
-            IIndex index = Stopwatcher.Time<JsonIndex>(() => new(), "Loaded index in");
+            string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            string indexPath = Path.Combine(appDataFolder, INDEX_DIR, INDEX_NAME);
+            IIndex index = Stopwatcher.Time<JsonIndex>(() => new(indexPath), "Loaded index in");
             IModel model = new TfIdfModel();
 
-            index.SetModel(model);
-            model.SetIndex(index);
+            index.Model = model;
+            model.Index = index;
 
             foreach (var command in new CommandRepository(index).Commands)
             {

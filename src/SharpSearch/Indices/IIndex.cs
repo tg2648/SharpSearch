@@ -2,8 +2,13 @@ using SharpSearch.Models;
 
 namespace SharpSearch.Indices;
 
-interface IIndex
+public interface IIndex
 {
+    /// <summary>
+    ///     A model that is responsible for calculating document scores
+    /// </summary>
+    public IModel? Model { get; set; }
+
     /// <summary>
     ///     Adds file or directory to the index.
     /// </summary>
@@ -13,11 +18,6 @@ interface IIndex
     ///     Removes file or directory from the index.
     /// </summary>
     public void Remove(string path);
-
-    /// <summary>
-    ///     Persists index to disk.
-    /// </summary>
-    public void Save();
 
     /// <summary>
     ///     Re-index files that have been modified since they were added to the index.
@@ -43,9 +43,4 @@ interface IIndex
     ///     Returns the number of documents where term `t` appears at least once.
     /// </summary>
     public int GetDocumentFrequency(string t);
-
-    /// <summary>
-    ///     Assigns a given model to be responsible for calculating scores
-    /// </summary>
-    public void SetModel(IModel model);
 }

@@ -1,26 +1,21 @@
-using System.Dynamic;
 using SharpSearch.Indices;
-using SharpSearch.Models;
 
-class TfIdfModel : IModel
+namespace SharpSearch.Models;
+
+public class TfIdfModel : IModel
 {
-    private IIndex? _index;
-
-    public void SetIndex(IIndex index)
-    {
-        _index = index;
-    }
+    public IIndex? Index { get; set; }
 
     private double GetTf(string t, Document d)
     {
-        int rawTf = _index!.GetTermFrequency(t, d);
+        int rawTf = Index!.GetTermFrequency(t, d);
         return Math.Log10(1 + rawTf);
     }
 
     private double GetIdf(string t)
     {
-        int N = _index!.GetInfo().DocumentCount;
-        int df = _index!.GetDocumentFrequency(t);
+        int N = Index!.GetInfo().DocumentCount;
+        int df = Index!.GetDocumentFrequency(t);
 
         return Math.Log10(N / df);
     }

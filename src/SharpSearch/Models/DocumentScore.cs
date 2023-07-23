@@ -1,3 +1,3 @@
 namespace SharpSearch.Models;
 
-public record class DocumentScore(string Path, double Score);
+public record class DocumentScore(Document Document, double Score);

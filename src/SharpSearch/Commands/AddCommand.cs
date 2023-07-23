@@ -3,7 +3,7 @@ using SharpSearch.Indices;
 
 namespace SharpSearch.Commands;
 
-class AddCommand : ICommand
+public class AddCommand : ICommand
 {
     public Command Command { get; }
 
@@ -19,7 +19,8 @@ class AddCommand : ICommand
         Command.AddArgument(addPathsArgument);
         Command.SetHandler((paths) =>
         {
-            Stopwatcher.Time(() => {
+            Stopwatcher.Time(() =>
+            {
                 foreach (var path in paths)
                 {
                     try
@@ -36,7 +37,6 @@ class AddCommand : ICommand
                     }
                 }
             }, "Added to index in");
-            index.Save();
         }, addPathsArgument);
     }
 }

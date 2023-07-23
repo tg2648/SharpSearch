@@ -8,12 +8,10 @@ namespace SharpSearch.Indices;
 
 using TermDocFreq = Dictionary<string, int>;
 
-class JsonIndex : IIndex
+public class JsonIndex : IIndex
 {
-    private const string INDEX_NAME = "index.json";
-    private const string INDEX_DIR = "SharpSearch";
     private readonly string _indexPath;
-    private IModel? _model;
+    public IModel? Model { get; set; }
 
     private readonly Dictionary<string, IFileImporter> _extensionToImporter = new()
     {
@@ -28,10 +26,12 @@ class JsonIndex : IIndex
     private Dictionary<string, Document> _files = new(); // Id -> Document
     private readonly Dictionary<string, string> _fileIds = new(); // Path -> Id
 
-    public JsonIndex(string? indexPath = default)
+
+    public JsonIndex(string indexPath)
     {
         // Use existing index or initialize a new one
-        _indexPath = indexPath ?? Initialize();
+        _indexPath = indexPath;
+        Initialize(_indexPath);
         ParseIndexFile(_indexPath);
     }
 
@@ -43,11 +43,8 @@ class JsonIndex : IIndex
     /// <returns>
     ///     Path to the index file
     /// </returns>
-    private static string Initialize()
+    private static string Initialize(string indexPath)
     {
-        string appDataFolder = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string indexPath = Path.Combine(appDataFolder, INDEX_DIR, INDEX_NAME);
-
         if (!File.Exists(indexPath))
         {
             string? indexDir = Path.GetDirectoryName(indexPath);
@@ -68,7 +65,8 @@ class JsonIndex : IIndex
         return indexPath;
     }
 
-    private void ParseIndexFile(string indexPath) {
+    private void ParseIndexFile(string indexPath)
+    {
         string jsonString = File.ReadAllText(indexPath);
 
         if (jsonString == string.Empty)
@@ -80,7 +78,6 @@ class JsonIndex : IIndex
 
             JsonElement root = document.RootElement;
             JsonElement termsElement = root.GetProperty(nameof(_terms));
-
             _terms = JsonSerializer.Deserialize<Dictionary<string, TermDocFreq>>(termsElement)!;
 
             JsonElement filePathsElement = root.GetProperty(nameof(_files));
@@ -180,7 +177,8 @@ class JsonIndex : IIndex
             foreach ((string term, TermDocFreq tdf) in _terms)
             {
                 tdf.Remove(id);
-                if (tdf.Count == 0) emptyTerms.Add(term);
+                if (tdf.Count == 0)
+                    emptyTerms.Add(term);
             }
 
             // Prune empty terms
@@ -193,12 +191,13 @@ class JsonIndex : IIndex
         }
     }
 
-    /* Public Interface */
-
-    public void SetModel(IModel model)
+    private void Save()
     {
-        _model = model;
+        string jsonString = JsonSerializer.Serialize(new { _terms, _files });
+        File.WriteAllText(_indexPath, jsonString);
     }
+
+    /* Public Interface */
 
     public void Add(string path)
     {
@@ -218,6 +217,7 @@ class JsonIndex : IIndex
         {
             throw new ArgumentException($"{path} is not a valid file or directory.");
         }
+        Save();
     }
 
     public void Remove(string path)
@@ -237,6 +237,7 @@ class JsonIndex : IIndex
         {
             throw new ArgumentException($"{path} is not a valid file or directory.");
         }
+        Save();
     }
 
     public IndexInfo GetInfo()
@@ -244,44 +245,36 @@ class JsonIndex : IIndex
         return new IndexInfo(DocumentCount: _files.Count);
     }
 
-    public void Save()
-    {
-        string jsonString = JsonSerializer.Serialize(new { _terms, _files });
-        File.WriteAllText(_indexPath, jsonString);
-    }
-
     public IEnumerable<DocumentScore> CalculateDocumentScores(string query)
     {
-       var scores = new Dictionary<string, double>();
+        var scores = new Dictionary<Document, double>();
 
         foreach (string token in Tokenizer.ExtractTokens(query))
         {
             if (_terms.ContainsKey(token))
             {
                 // Increment the score for each document that has the term
-                foreach ((string docId, int termCount) in _terms[token])
+                foreach ((string docId, _) in _terms[token])
                 {
-                    string docPath = _files[docId].Path;
-                    if (!scores.ContainsKey(docPath))
-                        scores[docPath] = 0;
+                    Document doc = _files[docId];
+                    if (!scores.ContainsKey(doc))
+                        scores[doc] = 0;
 
-                    scores[docPath] = scores[docPath] + _model!.CalculateScore(token, _files[docId]);
+                    scores[doc] = scores[doc] + Model!.CalculateScore(token, _files[docId]);
                 }
             }
         }
 
         // Length-normalize using document length
-        foreach ((string docPath, double score) in scores)
+        foreach ((Document doc, double score) in scores)
         {
-            string docId = _fileIds[docPath];
-            scores[docPath] = scores[docPath] / _files[docId].Length;
+            string docId = _fileIds[doc.Path];
+            scores[doc] = scores[doc] / _files[docId].Length;
         }
-
-        double maxScore = scores.Count > 0 ? scores.Values.Max() : -1;
 
         var result = scores
         .OrderByDescending((kvp) => kvp.Value)
-        .Select((kvp) => new DocumentScore(Path: kvp.Key, Score: kvp.Value));
+        .Select((kvp) => new DocumentScore(Document: kvp.Key, Score: kvp.Value));
 
         return result;
     }
@@ -291,13 +284,33 @@ class JsonIndex : IIndex
         throw new NotImplementedException();
     }
 
+    /// <summary>
+    ///     Returns the number of times the term occurs in the document
+    /// </summary>
     public int GetTermFrequency(string term, Document d)
     {
-        return _terms[term].GetValueOrDefault(_fileIds[d.Path], 0);
+        if (_terms.ContainsKey(term) && _fileIds.ContainsKey(d.Path))
+        {
+            return _terms[term][_fileIds[d.Path]];
+        }
+        else
+        {
+            return 0;
+        }
     }
 
+    /// <summary>
+    ///     Returns the number of documents the term occurs in
+    /// </summary>
     public int GetDocumentFrequency(string term)
     {
-        return _terms[term].Count;
+        if (_terms.ContainsKey(term))
+        {
+            return _terms[term].Count;
+        }
+        else
+        {
+            return 0;
+        }
     }
 }

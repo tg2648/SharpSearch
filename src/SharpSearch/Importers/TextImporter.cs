@@ -5,7 +5,7 @@ namespace SharpSearch.Importers;
 public class TextImporter : IFileImporter
 {
     /// <summary>
-    /// Parses the given file into a collection of tokens.
+    ///     Parses the given file into a collection of tokens.
     /// </summary>
     public IEnumerable<string> ExtractTokens(FileInfo file)
     {
