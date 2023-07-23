@@ -20,11 +20,6 @@ public interface IIndex
     public void Remove(string path);
 
     /// <summary>
-    ///     Persists index to disk.
-    /// </summary>
-    public void Save();
-
-    /// <summary>
     ///     Re-index files that have been modified since they were added to the index.
     /// </summary>
     public void Refresh();

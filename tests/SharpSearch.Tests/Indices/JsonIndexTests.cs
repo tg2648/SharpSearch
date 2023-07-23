@@ -91,4 +91,114 @@ public class JsonIndexTests
         var index = new JsonIndex(_indexPath);
         Assert.That(index.GetDocumentFrequency("document"), Is.EqualTo(1));
     }
+
+    [Test]
+    public void Add_PathDoesNotExist_Throws()
+    {
+        var index = new JsonIndex(_indexPath);
+        Assert.That(() => index.Add("abc"), Throws.TypeOf<ArgumentException>());
+    }
+
+    [Test]
+    public void Add_FileExists_UpdatesIndex()
+    {
+        var index = new JsonIndex(_indexPath);
+        string filePath = Path.GetTempFileName();
+        filePath = Path.ChangeExtension(filePath, ".txt");
+        File.AppendAllText(filePath, "Hello World!");
+        index.Add(filePath);
+
+        Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(1));
+        Assert.That(index.GetDocumentFrequency("hello"), Is.EqualTo(1));
+        Assert.That(index.GetDocumentFrequency("world"), Is.EqualTo(1));
+
+        File.Delete(filePath);
+    }
+
+    [Test]
+    public void Add_DirectoryExists_UpdatesIndex()
+    {
+        var index = new JsonIndex(_indexPath);
+        DirectoryInfo tempDir = Directory.CreateTempSubdirectory();
+        using (StreamWriter f1 = File.CreateText(Path.Combine(tempDir.FullName, "a.txt")))
+        {
+            f1.WriteLine("Hello World!");
+        }
+        using (StreamWriter f2 = File.CreateText(Path.Combine(tempDir.FullName, "b.txt")))
+        {
+            f2.WriteLine("Hello World!");
+        }
+        index.Add(tempDir.FullName);
+
+        Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(2));
+        Assert.That(index.GetDocumentFrequency("hello"), Is.EqualTo(2));
+        Assert.That(index.GetDocumentFrequency("world"), Is.EqualTo(2));
+
+        foreach (FileInfo file in tempDir.GetFiles())
+        {
+            file.Delete();
+        }
+        tempDir.Delete();
+    }
+
+    [Test]
+    public void Remove_DirectoryExists_UpdatesIndex()
+    {
+        var index = new JsonIndex(_indexPath);
+        DirectoryInfo tempDir = Directory.CreateTempSubdirectory();
+        using (StreamWriter f1 = File.CreateText(Path.Combine(tempDir.FullName, "a.txt")))
+        {
+            f1.WriteLine("Hello World!");
+        }
+        using (StreamWriter f2 = File.CreateText(Path.Combine(tempDir.FullName, "b.txt")))
+        {
+            f2.WriteLine("Hello World!");
+        }
+        index.Add(tempDir.FullName);
+        index.Remove(tempDir.FullName);
+
+        Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(0));
+        Assert.That(index.GetDocumentFrequency("hello"), Is.EqualTo(0));
+        Assert.That(index.GetDocumentFrequency("world"), Is.EqualTo(0));
+
+        foreach (FileInfo file in tempDir.GetFiles())
+        {
+            file.Delete();
+        }
+        tempDir.Delete();
+    }
+
+    [Test]
+    public void Remove_FileExists_UpdatesIndex()
+    {
+        var index = new JsonIndex(_indexPath);
+        DirectoryInfo tempDir = Directory.CreateTempSubdirectory();
+        using (StreamWriter f1 = File.CreateText(Path.Combine(tempDir.FullName, "a.txt")))
+        {
+            f1.WriteLine("Hello World!");
+        }
+        using (StreamWriter f2 = File.CreateText(Path.Combine(tempDir.FullName, "b.txt")))
+        {
+            f2.WriteLine("Hello World!");
+        }
+        index.Add(tempDir.FullName);
+        index.Remove(Path.Combine(tempDir.FullName, "a.txt"));
+
+        Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(1));
+        Assert.That(index.GetDocumentFrequency("hello"), Is.EqualTo(1));
+        Assert.That(index.GetDocumentFrequency("world"), Is.EqualTo(1));
+
+        foreach (FileInfo file in tempDir.GetFiles())
+        {
+            file.Delete();
+        }
+        tempDir.Delete();
+    }
+
+    [Test]
+    public void Remove_PathDoesNotExist_Throws()
+    {
+        var index = new JsonIndex(_indexPath);
+        Assert.That(() => index.Add("abc"), Throws.TypeOf<ArgumentException>());
+    }
 }

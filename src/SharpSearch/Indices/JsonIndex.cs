@@ -177,7 +177,8 @@ public class JsonIndex : IIndex
             foreach ((string term, TermDocFreq tdf) in _terms)
             {
                 tdf.Remove(id);
-                if (tdf.Count == 0) emptyTerms.Add(term);
+                if (tdf.Count == 0)
+                    emptyTerms.Add(term);
             }
 
             // Prune empty terms
@@ -188,6 +189,12 @@ public class JsonIndex : IIndex
 
             Console.WriteLine($"Removed from index: {path}");
         }
+    }
+
+    private void Save()
+    {
+        string jsonString = JsonSerializer.Serialize(new { _terms, _files });
+        File.WriteAllText(_indexPath, jsonString);
     }
 
     /* Public Interface */
@@ -210,6 +217,7 @@ public class JsonIndex : IIndex
         {
             throw new ArgumentException($"{path} is not a valid file or directory.");
         }
+        Save();
     }
 
     public void Remove(string path)
@@ -229,17 +237,12 @@ public class JsonIndex : IIndex
         {
             throw new ArgumentException($"{path} is not a valid file or directory.");
         }
+        Save();
     }
 
     public IndexInfo GetInfo()
     {
         return new IndexInfo(DocumentCount: _files.Count);
-    }
-
-    public void Save()
-    {
-        string jsonString = JsonSerializer.Serialize(new { _terms, _files });
-        File.WriteAllText(_indexPath, jsonString);
     }
 
     public IEnumerable<DocumentScore> CalculateDocumentScores(string query)
@@ -286,7 +289,14 @@ public class JsonIndex : IIndex
     /// </summary>
     public int GetTermFrequency(string term, Document d)
     {
-        return _terms[term][_fileIds[d.Path]];
+        if (_terms.ContainsKey(term) && _fileIds.ContainsKey(d.Path))
+        {
+            return _terms[term][_fileIds[d.Path]];
+        }
+        else
+        {
+            return 0;
+        }
     }
 
     /// <summary>
@@ -294,6 +304,13 @@ public class JsonIndex : IIndex
     /// </summary>
     public int GetDocumentFrequency(string term)
     {
-        return _terms[term].Count;
+        if (_terms.ContainsKey(term))
+        {
+            return _terms[term].Count;
+        }
+        else
+        {
+            return 0;
+        }
     }
 }
