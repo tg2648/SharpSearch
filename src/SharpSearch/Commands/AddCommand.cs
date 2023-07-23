@@ -37,7 +37,6 @@ public class AddCommand : ICommand
                     }
                 }
             }, "Added to index in");
-            index.Save();
         }, addPathsArgument);
     }
 }

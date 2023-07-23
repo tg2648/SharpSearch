@@ -37,7 +37,6 @@ public class RemoveCommand : ICommand
                     }
                 }
             }, "Removed from index in");
-            index.Save();
         }, removePathsArgument);
     }
 }
