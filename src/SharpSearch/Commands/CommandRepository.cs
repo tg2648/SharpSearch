@@ -15,6 +15,7 @@ public class CommandRepository
             new RemoveCommand(index).Command,
             new InfoCommand(index).Command,
             new QueryCommand(index).Command,
+            new PruneCommand(index).Command,
         };
     }
 }

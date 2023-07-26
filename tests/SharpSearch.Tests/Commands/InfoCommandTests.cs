@@ -12,14 +12,14 @@ public class InfoCommandTests : BaseCommandTests
     public void SetUp()
     {
         BaseSetUp();
-        rootCommand.AddCommand(new InfoCommand(mockIndex.Object).Command);
+        rootCommand!.AddCommand(new InfoCommand(mockIndex!.Object).Command);
         mockIndex.Setup(x => x.GetInfo()).Returns(new IndexInfo(default));
     }
 
     [Test]
     public void InfoCommand_GetInfoInvokedOnce()
     {
-        rootCommand.Invoke("info");
+        rootCommand!.Invoke("info");
         mockIndex!.Verify(index => index.GetInfo(), Times.Once());
     }
 }

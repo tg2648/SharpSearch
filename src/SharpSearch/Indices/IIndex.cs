@@ -25,6 +25,14 @@ public interface IIndex
     public void Refresh();
 
     /// <summary>
+    ///     Remove files from the index that no longer exist.
+    /// </summary>
+    /// <returns>
+    ///     Number of documents pruned
+    /// </returns>
+    public int Prune();
+
+    /// <summary>
     ///     Returns information/statistics about the index
     /// </summary>
     public IndexInfo GetInfo();
