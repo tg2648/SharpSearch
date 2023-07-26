@@ -11,14 +11,14 @@ public class QueryCommandTests : BaseCommandTests
     public void SetUp()
     {
         BaseSetUp();
-        rootCommand.AddCommand(new QueryCommand(mockIndex.Object).Command);
+        rootCommand!.AddCommand(new QueryCommand(mockIndex!.Object).Command);
     }
 
     [Test]
     public void QueryCommand_CalculateDocumentScoresInvokedOnce()
     {
         const string QUERY = "abcd";
-        rootCommand.Invoke($"query {QUERY}");
+        rootCommand!.Invoke($"query {QUERY}");
         mockIndex!.Verify(index => index.CalculateDocumentScores(QUERY), Times.Once());
     }
 }

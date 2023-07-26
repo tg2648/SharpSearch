@@ -5,7 +5,7 @@ namespace SharpSearch.Tests.Indices;
 [TestFixture]
 public class JsonIndexTests
 {
-    private string _indexPath;
+    private string? _indexPath;
 
     [SetUp]
     public void SetUp()
@@ -16,18 +16,18 @@ public class JsonIndexTests
     [TearDown]
     public void TearDown()
     {
-        File.Delete(_indexPath);
+        File.Delete(_indexPath!);
     }
 
     [Test]
     public void JsonIndex_IndexInitiallyDoesNotExist_InitializedEmpty()
     {
-        File.Delete(_indexPath);
-        var index = new JsonIndex(_indexPath);
+        File.Delete(_indexPath!);
+        var index = new JsonIndex(_indexPath!);
         Assert.Multiple(() =>
         {
             Assert.That(_indexPath, Does.Exist);
-            Assert.That(File.ReadAllText(_indexPath), Is.Empty);
+            Assert.That(File.ReadAllText(_indexPath!), Is.Empty);
         });
     }
 
@@ -48,9 +48,9 @@ public class JsonIndexTests
                 }
             }
         }";
-        File.WriteAllText(_indexPath, json);
+        File.WriteAllText(_indexPath!, json);
 
-        var index = new JsonIndex(_indexPath);
+        var index = new JsonIndex(_indexPath!);
         Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(1));
     }
 
@@ -64,9 +64,9 @@ public class JsonIndexTests
                 }
             },
         }";
-        File.WriteAllText(_indexPath, json);
+        File.WriteAllText(_indexPath!, json);
 
-        Assert.That(() => new JsonIndex(_indexPath), Throws.TypeOf<ApplicationException>());
+        Assert.That(() => new JsonIndex(_indexPath!), Throws.TypeOf<ApplicationException>());
     }
 
     [Test]
@@ -86,39 +86,41 @@ public class JsonIndexTests
                 }
             }
         }";
-        File.WriteAllText(_indexPath, json);
+        File.WriteAllText(_indexPath!, json);
 
-        var index = new JsonIndex(_indexPath);
+        var index = new JsonIndex(_indexPath!);
         Assert.That(index.GetDocumentFrequency("document"), Is.EqualTo(1));
     }
 
     [Test]
     public void Add_PathDoesNotExist_Throws()
     {
-        var index = new JsonIndex(_indexPath);
+        var index = new JsonIndex(_indexPath!);
         Assert.That(() => index.Add("abc"), Throws.TypeOf<ArgumentException>());
     }
 
     [Test]
     public void Add_FileExists_UpdatesIndex()
     {
-        var index = new JsonIndex(_indexPath);
-        string filePath = Path.GetTempFileName();
-        filePath = Path.ChangeExtension(filePath, ".txt");
-        File.AppendAllText(filePath, "Hello World!");
-        index.Add(filePath);
+        var index = new JsonIndex(_indexPath!);
+        string tmpFilePath = Path.GetTempFileName();
+        string txtFilePath = Path.ChangeExtension(tmpFilePath, ".txt");
+        File.AppendAllText(txtFilePath, "Hello World!");
+
+        index.Add(txtFilePath);
 
         Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(1));
         Assert.That(index.GetDocumentFrequency("hello"), Is.EqualTo(1));
         Assert.That(index.GetDocumentFrequency("world"), Is.EqualTo(1));
 
-        File.Delete(filePath);
+        File.Delete(tmpFilePath);
+        File.Delete(txtFilePath);
     }
 
     [Test]
     public void Add_DirectoryExists_UpdatesIndex()
     {
-        var index = new JsonIndex(_indexPath);
+        var index = new JsonIndex(_indexPath!);
         DirectoryInfo tempDir = Directory.CreateTempSubdirectory();
         using (StreamWriter f1 = File.CreateText(Path.Combine(tempDir.FullName, "a.txt")))
         {
@@ -142,9 +144,33 @@ public class JsonIndexTests
     }
 
     [Test]
+    public void Add_FileChangedAndReadded_IndexIsCorrect()
+    {
+        var index = new JsonIndex(_indexPath!);
+        string tmpFilePath = Path.GetTempFileName();
+        string txtFilePath = Path.ChangeExtension(tmpFilePath, ".txt");
+        File.WriteAllText(txtFilePath, "Hello World!");
+        index.Add(txtFilePath);
+        File.WriteAllText(txtFilePath, "One Two!");
+        index.Add(txtFilePath);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(1));
+            Assert.That(index.GetDocumentFrequency("hello"), Is.EqualTo(0));
+            Assert.That(index.GetDocumentFrequency("world"), Is.EqualTo(0));
+            Assert.That(index.GetDocumentFrequency("one"), Is.EqualTo(1));
+            Assert.That(index.GetDocumentFrequency("two"), Is.EqualTo(1));
+        });
+
+        File.Delete(tmpFilePath);
+        File.Delete(txtFilePath);
+    }
+
+    [Test]
     public void Remove_DirectoryExists_UpdatesIndex()
     {
-        var index = new JsonIndex(_indexPath);
+        var index = new JsonIndex(_indexPath!);
         DirectoryInfo tempDir = Directory.CreateTempSubdirectory();
         using (StreamWriter f1 = File.CreateText(Path.Combine(tempDir.FullName, "a.txt")))
         {
@@ -171,7 +197,7 @@ public class JsonIndexTests
     [Test]
     public void Remove_FileExists_UpdatesIndex()
     {
-        var index = new JsonIndex(_indexPath);
+        var index = new JsonIndex(_indexPath!);
         DirectoryInfo tempDir = Directory.CreateTempSubdirectory();
         using (StreamWriter f1 = File.CreateText(Path.Combine(tempDir.FullName, "a.txt")))
         {
@@ -198,7 +224,27 @@ public class JsonIndexTests
     [Test]
     public void Remove_PathDoesNotExist_Throws()
     {
-        var index = new JsonIndex(_indexPath);
+        var index = new JsonIndex(_indexPath!);
         Assert.That(() => index.Add("abc"), Throws.TypeOf<ArgumentException>());
     }
+
+    [Test]
+    public void Prune_RemovesFromIndex()
+    {
+        var index = new JsonIndex(_indexPath!);
+        string tmpFilePath = Path.GetTempFileName();
+        string txtFilePath = Path.ChangeExtension(tmpFilePath, ".txt");
+        File.AppendAllText(txtFilePath, "Hello World!");
+        index.Add(txtFilePath);
+        File.Delete(tmpFilePath);
+        File.Delete(txtFilePath);
+
+        int pruned = index.Prune();
+
+        Assert.That(pruned, Is.EqualTo(1));
+        Assert.That(index.GetInfo().DocumentCount, Is.EqualTo(0));
+        Assert.That(index.GetDocumentFrequency("hello"), Is.EqualTo(0));
+        Assert.That(index.GetDocumentFrequency("world"), Is.EqualTo(0));
+    }
+
 }

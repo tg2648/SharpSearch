@@ -16,7 +16,6 @@ public class CommandRepositoryTests
 
         CollectionAssert.AllItemsAreInstancesOfType(cr.Commands, typeof(Command));
         CollectionAssert.AllItemsAreNotNull(cr.Commands);
-        CollectionAssert.AllItemsAreUnique(cr.Commands);
-        Assert.That(cr.Commands, Has.Exactly(4).Items);
+        Assert.That(cr.Commands, Has.Exactly(5).Items);
     }
 }

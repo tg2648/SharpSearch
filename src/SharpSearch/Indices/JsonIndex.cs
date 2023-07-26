@@ -10,9 +10,9 @@ using TermDocFreq = Dictionary<string, int>;
 
 public class JsonIndex : IIndex
 {
-    private readonly string _indexPath;
     public IModel? Model { get; set; }
 
+    private readonly string _indexPath;
     private readonly Dictionary<string, IFileImporter> _extensionToImporter = new()
     {
         [".txt"] = new TextImporter(),
@@ -25,7 +25,6 @@ public class JsonIndex : IIndex
     private Dictionary<string, TermDocFreq> _terms = new();
     private Dictionary<string, Document> _files = new(); // Id -> Document
     private readonly Dictionary<string, string> _fileIds = new(); // Path -> Id
-
 
     public JsonIndex(string indexPath)
     {
@@ -117,36 +116,38 @@ public class JsonIndex : IIndex
         if (!_extensionToImporter.ContainsKey(extension))
         {
             Console.WriteLine($"SKIPPED: Unknown extension {extension}: {path}");
+            return;
+        }
+
+        IFileImporter importer = _extensionToImporter[extension];
+        IEnumerable<string> tokens = importer.ExtractTokens(file);
+        int documentLength = tokens.Count();
+
+        string fileId;
+        if (_fileIds.ContainsKey(path))
+        {
+            // This file was previously indexed, remove it from the index first
+            RemoveFile(path);
+            fileId = _fileIds[path];
         }
         else
         {
-            IFileImporter importer = _extensionToImporter[extension];
-            IEnumerable<string> tokens = importer.ExtractTokens(file);
-
-            int documentLength = tokens.Count();
-            string fileId;
-            if (_fileIds.ContainsKey(path))
-            {
-                fileId = _fileIds[path];
-            }
-            else
-            {
-                fileId = Guid.NewGuid().ToString("n");
-                _fileIds.Add(path, fileId);
-                _files.Add(fileId, new Document(path, documentLength, file.LastWriteTimeUtc));
-            }
-
-            // Calculate and store term frequencies for the document
-            var tokenGroups = tokens.GroupBy(token => token);
-            foreach (var group in tokenGroups)
-            {
-                string token = group.Key;
-                _terms.TryAdd(token, new TermDocFreq());
-                _terms[token][fileId] = group.Count();
-            }
-
-            Console.WriteLine($"Indexed: {path}");
+            fileId = Guid.NewGuid().ToString("n");
+            _fileIds.Add(path, fileId);
         }
+
+        _files.Add(fileId, new Document(path, documentLength, file.LastWriteTimeUtc));
+
+        // Calculate and store term frequencies for the document
+        var tokenGroups = tokens.GroupBy(token => token);
+        foreach (var group in tokenGroups)
+        {
+            string token = group.Key;
+            _terms.TryAdd(token, new TermDocFreq());
+            _terms[token][fileId] = group.Count();
+        }
+
+        Console.WriteLine($"Indexed: {path}");
     }
 
     /// <summary>
@@ -238,6 +239,21 @@ public class JsonIndex : IIndex
             throw new ArgumentException($"{path} is not a valid file or directory.");
         }
         Save();
+    }
+
+    public int Prune()
+    {
+        int pruned = 0;
+        foreach ((_, Document doc) in _files)
+        {
+            if (!File.Exists(doc.Path))
+            {
+                RemoveFile(doc.Path);
+                pruned++;
+            }
+        }
+        Save();
+        return pruned;
     }
 
     public IndexInfo GetInfo()

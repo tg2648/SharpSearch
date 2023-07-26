@@ -5,8 +5,8 @@ using SharpSearch.Indices;
 [TestFixture]
 public class BaseCommandTests
 {
-    public RootCommand rootCommand;
-    public Mock<IIndex> mockIndex;
+    public RootCommand? rootCommand;
+    public Mock<IIndex>? mockIndex;
 
     [SetUp]
     public void BaseSetUp()
